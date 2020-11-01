@@ -109,7 +109,10 @@ int main(void)
         LCD_ShowString(24, 32, (u8 *)("no card found!"), BRED);
         LCD_ShowString(24, 48, (u8 *)("no card found!"), GBLUE);
         LCD_ShowString(24, 64, (u8 *)("no card found!"), RED);
-        while (1)
+
+// EB MOD! Lichtorgel macht die normale Schleife, aber alle 6s das Logo einblenden
+
+        for (u8 i = 0; ; ++i)
         {
             LEDR_TOG;
             delay_1ms(200);
@@ -117,6 +120,12 @@ int main(void)
             delay_1ms(200);
             LEDB_TOG;
             delay_1ms(200);
+
+            if (i > 10)
+            {
+                LCD_ShowLogo();
+                i = 0;
+            }
         }
     }
 }

@@ -32,6 +32,29 @@ void init_uart0(void)
     usart_interrupt_enable(USART0, USART_INT_RBNE);
 }
 
+
+void LCD_StripesLoop()
+{
+	LCD_Address_Set(0, 0, LCD_W - 1, LCD_H - 1);
+    #define SCHWARZ BLACK
+    #define ROT RED
+    #define GOLD (RED | GREEN)
+
+    for (int offs = 0;; ++offs)
+    {
+        for (int y = 0; y < LCD_H; y++)
+        {
+            for (int x = 0; x < LCD_W; x++)
+            {
+                LCD_WR_DATA8((u8) (x + offs));
+            }
+        }
+
+        offs++;
+        //delay_1ms(1);
+    }
+}
+
 int main(void)
 {
     uint8_t mount_is_ok = 1; /* 0: mount successful ; 1: mount failed */
@@ -125,6 +148,9 @@ int main(void)
             {
                 LCD_ShowLogo();
                 i = 0;
+
+                delay_1ms(5000);
+                LCD_StripesLoop();
             }
         }
     }

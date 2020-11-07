@@ -39,7 +39,7 @@ void LCD_StripesLoop()
     #define SCHWARZ BLACK
     #define ROT RED
     #define GOLD (RED | GREEN)
-
+#if 0
     for (int offs = 0;; ++offs)
     {
         for (int y = 0; y < LCD_H; y++)
@@ -52,6 +52,62 @@ void LCD_StripesLoop()
         }
         //delay_1ms(1);
     }
+#endif
+
+    #define NSTARS 60
+
+    int sa[NSTARS];
+    int sdx[NSTARS];
+    int sdy[NSTARS];
+
+    for (u8 a = 0; a < NSTARS; a++)
+      {        
+        sa[a] = rand() % 100; 
+        sdx[a] = (rand() % 200)-100;
+        sdy[a] = (rand() % 200)-100;
+      }
+
+
+    for (int offs = 0;; ++offs)
+    {
+        int sx[60];
+        int sy[60];
+
+        for (u8 a = 0; a < NSTARS; a++)
+         {        
+            sa[a]++;
+           
+            if (sa[a] > NSTARS)
+            {
+                sa[a] = 0;
+            }
+
+           sx[a] = 80 + (sa[a] *sa[a] * sdx[a]) /2000;
+           sy[a] = 30 + (sa[a] *sa[a] * sdy[a]) /2000;
+         }
+
+        for (u8 y = 0; y < LCD_H; y++)
+        {
+            for (u8 x = 0; x < LCD_W; x++)
+            {
+                int isst = 0;
+                for (u8 a=0; a < NSTARS; a++) 
+                {
+                    if ((x == sx[a]) && (y == sy[a])) { isst = 1; break; }
+                }
+                if (isst)
+                        {   LCD_WR_DATA8(0xFF); 
+                            LCD_WR_DATA8(0xFF); 
+                        }
+                 else {   LCD_WR_DATA8(0x00); 
+                          LCD_WR_DATA8(0x00); 
+                      } 
+            }
+        }
+                LCD_WR_DATA8((u8) (x + offs));
+        //delay_1ms(1);
+    }
+
 }
 
 int main(void)

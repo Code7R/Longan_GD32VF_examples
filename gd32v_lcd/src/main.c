@@ -47,10 +47,9 @@ void LCD_StripesLoop()
             for (int x = 0; x < LCD_W; x++)
             {
                 LCD_WR_DATA8((u8) (x + offs));
+                LCD_WR_DATA8((u8) (x + offs));
             }
         }
-
-        offs++;
         //delay_1ms(1);
     }
 }

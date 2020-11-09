@@ -33,12 +33,14 @@ void init_uart0(void)
 }
 
 
-void LCD_StripesLoop()
+void LCD_StarsLoop()
 {
 	LCD_Address_Set(0, 0, LCD_W - 1, LCD_H - 1);
     #define SCHWARZ BLACK
     #define ROT RED
     #define GOLD (RED | GREEN)
+
+    /* display test with flashy stripes */
 #if 0
     for (int offs = 0;; ++offs)
     {
@@ -54,60 +56,69 @@ void LCD_StripesLoop()
     }
 #endif
 
-    #define NSTARS 60
+#define NSTARS 50
+#define STARMID 30
+#define DISTMAX 60
+/* MIN_BRIGHT + DISTMAX / DIST_BRIGHT_FAC should be <= 31 */
+#define MIN_BRIGHT 2
+#define DIST_BRIGHT_FAC 2
 
-    int sa[NSTARS];
-    int sdx[NSTARS];
-    int sdy[NSTARS];
+    int dist[NSTARS];
+    int movec_x[NSTARS];
+    int movec_y[NSTARS];
 
     for (u8 a = 0; a < NSTARS; a++)
-      {        
-        sa[a] = rand() % 100; 
-        sdx[a] = (rand() % 200)-100;
-        sdy[a] = (rand() % 200)-100;
-      }
-
+    {
+        dist[a] = rand() % DISTMAX;
+        movec_x[a] = (rand() % 200) - 100;
+        movec_y[a] = (rand() % 200) - 100;
+    }
 
     for (int offs = 0;; ++offs)
     {
-        int sx[60];
-        int sy[60];
-
+        int sx[NSTARS];
+        int sy[NSTARS];
+        // update locations and map to screen position
         for (u8 a = 0; a < NSTARS; a++)
-         {        
-            sa[a]++;
-           
-            if (sa[a] > NSTARS)
+        {
+            dist[a]++;
+            if (dist[a] > DISTMAX)
             {
-                sa[a] = 0;
+                dist[a] = 1;
             }
 
-           sx[a] = 80 + (sa[a] *sa[a] * sdx[a]) /2000;
-           sy[a] = 30 + (sa[a] *sa[a] * sdy[a]) /2000;
-         }
+            sx[a] = LCD_W / 2 + (dist[a] * dist[a] * movec_x[a]) / 2000;
+            sy[a] = STARMID + (dist[a] * dist[a] * movec_y[a]) / 2000;
+        }
 
-        for (u8 y = 0; y < LCD_H; y++)
+        for (int y = 0; y < LCD_H; y++)
         {
-            for (u8 x = 0; x < LCD_W; x++)
+            for (int x = 0; x < LCD_W; x++)
             {
-                int isst = 0;
-                for (u8 a=0; a < NSTARS; a++) 
+                int dist_star = 0;
+                u8 lo = 0, hi = 0;
+                for (u8 a = 0; a < NSTARS; a++)
                 {
-                    if ((x == sx[a]) && (y == sy[a])) { isst = 1; break; }
+                    if ((x == sx[a]) && (y == sy[a]))
+                    {
+                        dist_star = dist[a];
+                        break;
+                    }
                 }
-                if (isst)
-                        {   LCD_WR_DATA8(0xFF); 
-                            LCD_WR_DATA8(0xFF); 
-                        }
-                 else {   LCD_WR_DATA8(0x00); 
-                          LCD_WR_DATA8(0x00); 
-                      } 
+                if (dist_star)
+                {
+                    // convert to shades of gray
+                    u8 bri = MIN_BRIGHT + (dist_star / DIST_BRIGHT_FAC);
+                    if (bri > 31) bri = 31;
+                    hi = (u8)(bri << 3) | (u8) (bri >> 2);
+                    lo = (u8) (bri << 5) | (u8) bri;
+                }
+                LCD_WR_DATA8(hi);
+                LCD_WR_DATA8(lo);
             }
         }
-                LCD_WR_DATA8((u8) (x + offs));
         //delay_1ms(1);
     }
-
 }
 
 int main(void)
@@ -199,13 +210,13 @@ int main(void)
             LEDB_TOG;
             delay_1ms(200);
 
-            if (i > 10)
+            if (i > 2)
             {
                 LCD_ShowLogo();
                 i = 0;
 
-                delay_1ms(5000);
-                LCD_StripesLoop();
+                delay_1ms(1000);
+                LCD_StarsLoop();
             }
         }
     }
